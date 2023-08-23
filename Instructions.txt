@@ -1,0 +1,11 @@
+1. npx create-expo-app frontend
+2. cd frontend
+3. npx expo start (then exit)
+4. npm install react-native-maps
+5. Get API Key from Google Maps
+    - AIzaSyCBZD28SfZeIxWtvqXyn_oRTu2NbQxfI5c
+6. Follow steps from react-native-maps github
+    - MapView, Marker, PROVIDER_GOOGLE
+7. Go to the Routes API from Google, and translate the curl request to fetch, while putting your API Key
+8. Decode the encodedPolyline by using import polyline from '@mapbox/polyline';
+9. Create <Polyline /> component while passing the correct attributes
