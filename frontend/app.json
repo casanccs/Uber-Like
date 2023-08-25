@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "driver-frontend",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +15,14 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "infoPlist": {
+          "NSAppTransportSecurity": {
+            "NSAllowsArbitraryLoads": true
+          }
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {

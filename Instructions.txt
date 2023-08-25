@@ -9,3 +9,41 @@
 7. Go to the Routes API from Google, and translate the curl request to fetch, while putting your API Key
 8. Decode the encodedPolyline by using import polyline from '@mapbox/polyline';
 9. Create <Polyline /> component while passing the correct attributes
+10. npm install react-native-google-maps-directions
+11. Do backend for orders, MUST use command "python manage.py runserver 0.0.0.0:8000"
+12. Download ngrok to get temporary HTTPS server. 
+    - Use command "ngrok http 8000"
+    - Copy and paste the "https://...." Forwarding link, then test the endpoint out in postman
+13. Use that as the fetch for the api
+14. NOTE, here I must use an anonymous arrow function to wrap the function call to pass parameters
+
+
+
+
+
+12. Setup Dockerfile for backend and nginx to apply SSL certificate, so run it in Docker
+12. Get SSL Certificate
+    1. Open Git Bash and run this command: openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+    2. Locate the key.pem and certificate.pem in your "username" directory
+    3. Move it to desktop
+    4. In settings.py, add all this:
+        *****
+            SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+            # ...
+
+            # Add the following lines at the end of the settings file
+            CSRF_COOKIE_SECURE = True
+            SESSION_COOKIE_SECURE = True
+            SECURE_HSTS_SECONDS = 31536000
+            SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+            SECURE_HSTS_PRELOAD = True
+            SECURE_CONTENT_TYPE_NOSNIFF = True
+            SECURE_BROWSER_XSS_FILTER = True
+
+            # SSL/TLS settings
+            SSL_CERTIFICATE = 'path_to_your_cert_file/cert.pem'
+            SSL_KEY = 'path_to_your_key_file/key.pem'
+        *****
+        MAKE SURE YOU CHANGE PATH TO THE CERTIFICATE
+13. pip install django-sslserver, add "sslserver" in INSTALLED_APPS
