@@ -1,10 +1,9 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Button,TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button,TouchableOpacity, Alert } from 'react-native';
 import MapView, { Polyline, Marker, PROVIDER_GOOGLE } from 'react-native-maps'
 import {useState, useEffect} from 'react'
 import polyline from '@mapbox/polyline';
 import getDirections from 'react-native-google-maps-directions'
-// import Geolocation from 'react-native-geolocation-service'
+import * as Location from 'expo-location'
 
 const origin1 = {latitude: 29.543475,longitude: -95.149490}
 const url = "https://e83e-2600-1700-4bec-220-74c6-7b90-325f-7f0c.ngrok-free.app/api/order/"
@@ -22,6 +21,7 @@ export default function App() {
   const [distance, setDistance] = useState(null)
   const [id, setId] = useState(null)
   const [inRide, setInRide] = useState(false)
+  const [location, setLocation] = useState(null)
 
 
   function cancel(){
@@ -34,6 +34,19 @@ export default function App() {
 
   useEffect(() => {
     getOrders()
+    const getPermissions = async() => {
+      let {status} = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted'){
+        console.log("Please Grant Permission")
+        return
+      }
+      else{
+        let currentLocation = await Location.getCurrentPositionAsync({})
+        setLocation(currentLocation)
+        console.log("Location: ", currentLocation)
+      }
+    }
+    getPermissions()
   },[])
 
   async function refresh(){
@@ -46,6 +59,71 @@ export default function App() {
     let response = await fetch(url)
     let data = await response.json()
     setStartCoordinates(data)
+  }
+
+  async function acceptRide(){
+    setInRide(true)
+    let response = await fetch(url, {
+      method: "PUT", // This will already have all the information that is needed, which is the user info
+      headers:{
+        "Content-type": "application/json"
+      },
+      body: JSON.stringify({
+        "id": id,
+        "type": "accept"
+      })
+    })
+    let data = await response.json()
+    console.log(data)
+    // Now that order is unavailable. So you must hide all orders other than this one in the app's map
+    // As a response, you must get the user's name, and a photo of them.
+
+  }
+  async function cancelRide(){
+    setInRide(false)
+    let response = await fetch(url, {
+      method: "PUT", // This will already have all the information that is needed, which is the user info
+      headers:{
+        "Content-type": "application/json"
+      },
+      body: JSON.stringify({
+        "id": id,
+        "type": "cancel"
+      })
+    })
+    let data = await response.json()
+    console.log(data)
+  }
+  
+
+  async function completeRide(){
+    Alert.alert('Check', 'Are you sure you are dropped off?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log("Canceled Finished")
+      },
+      {
+        text: "OK",
+        onPress: async function () {
+          let response = await fetch(url, {
+            method: "DELETE",
+            headers:{
+              "Content-type": "application/json"
+            },
+            body: JSON.stringify({
+              "id": id,
+            })
+          })
+          setInRide(false)
+          response = await fetch(url)
+          let data = await response.json()
+          setStartCoordinates(data)
+          setOrigin(null)
+          setStartCoordinates([])
+          setDestinationCoordinate(null)
+        }
+      }
+    ])
   }
 
   async function viewRoute(coord){
@@ -103,40 +181,6 @@ export default function App() {
     setId(coord.id)
   }
 
-  async function acceptRide(){
-    setInRide(true)
-    let response = await fetch(url, {
-      method: "PUT", // This will already have all the information that is needed, which is the user info
-      headers:{
-        "Content-type": "application/json"
-      },
-      body: JSON.stringify({
-        "id": id,
-        "type": "accept"
-      })
-    })
-    let data = await response.json()
-    console.log(data)
-    // Now that order is unavailable. So you must hide all orders other than this one in the app's map
-    // As a response, you must get the user's name, and a photo of them.
-
-  }
-  async function cancelRide(){
-    setInRide(false)
-    let response = await fetch(url, {
-      method: "PUT", // This will already have all the information that is needed, which is the user info
-      headers:{
-        "Content-type": "application/json"
-      },
-      body: JSON.stringify({
-        "id": id,
-        "type": "cancel"
-      })
-    })
-    let data = await response.json()
-    console.log(data)
-
-  }
   
   async function handleGetDirections(){
     const dirData = {
@@ -160,10 +204,10 @@ export default function App() {
 
   return (
     <View style={{flex: 1}} >
-      <MapView provider={PROVIDER_GOOGLE} style={{flex:1}} // NOTE!!! This should be the Geolocation
+      {location && <MapView provider={PROVIDER_GOOGLE} style={{flex:1}} // NOTE!!! This should be the Geolocation
         initialRegion={{
-          latitude: origin1["latitude"],
-          longitude: origin1["longitude"],
+          latitude: location['coords']['latitude'],
+          longitude: location['coords']['longitude'],
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
@@ -184,11 +228,14 @@ export default function App() {
         }} >Accept Ride</Text>} */}
         {showPolyline && (<Polyline coordinates={decodedCoordinates} strokeColor="#FFF" strokeWidth={5} />)}
         {(showPolyline && destinationCoordinate) && (<Marker coordinate={destinationCoordinate} title="Destination" />)}
-      </MapView>
+      </MapView>}
       {!inRide && <TouchableOpacity style={{position: 'absolute', top: 70, left:25,width: 50, height: 50, backgroundColor: 'blue', borderRadius: 200}} onPress={refresh}>
         <View></View>
       </TouchableOpacity>}
-      { inRide && <TouchableOpacity style={{position: 'absolute', top: 70, right:25,width: 50, height: 50, backgroundColor: 'blue', borderRadius: 200}} onPress={cancelRide}>
+      {!inRide && <TouchableOpacity style={{position: 'absolute', top: 140, left:25,width: 50, height: 50, backgroundColor: 'lime', borderRadius: 200}} onPress={refresh}>
+        <View></View>
+      </TouchableOpacity>}
+      {inRide && <TouchableOpacity style={{position: 'absolute', top: 70, right:25,width: 50, height: 50, backgroundColor: 'blue', borderRadius: 200}} onPress={cancelRide}>
         <View></View>
       </TouchableOpacity>}
       {(showPolyline && !inRide) && (<TouchableOpacity onPress={cancel}>
@@ -200,6 +247,9 @@ export default function App() {
       {inRide && <Text style={{
         position: "absolute", color: "white", bottom: 30, backgroundColor: '#2e2e2e', textAlign: "center", fontSize: 40, height: 50, width: '100%'
         }} onPress={handleGetDirections}>View Directions</Text>}
+      {inRide && <Text style={{
+        position: "absolute", color: "white", bottom: 200, backgroundColor: '#2e2e2e', textAlign: "center", fontSize: 40, height: 50, width: '100%'
+        }} onPress={completeRide}>Finished Ride</Text>}
       {price && <Text style={{backgroundColor: "gray", bottom: 80, fontSize: 35, position: 'absolute', width: '100%', textAlign: 'center', color: 'white'}}>
         Price: ${parseFloat(price).toFixed(2)}</Text>}
       {distance && <Text style={{backgroundColor: "gray", bottom: 120, fontSize: 35, position: 'absolute', width: '100%', textAlign: 'center', color: 'white'}}>

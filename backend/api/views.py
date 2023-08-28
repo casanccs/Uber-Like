@@ -33,3 +33,9 @@ class OrderView(APIView):
             order.stat = "available"
         order.save()
         return Response(f"Order: {order.id} has been updated!")
+    
+    def delete(self, request):
+        data = request.data
+        order = Order.objects.get(id=data['id'])
+        order.delete()
+        return Response(f"Order deleted", status=200)
