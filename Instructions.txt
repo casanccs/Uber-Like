@@ -23,9 +23,27 @@ NOTE!! One error that could happen, is when leaving/restarting the app, the orde
     the order to completely be unavailable!
 
 Driver:
-    * Geolocation
+    * Geolocation, always location, and needs to update the customer about their whereabouts, along with approximate time
     * Cashout
     * Account Info
     * Chat
     * Ensuring no "scamming"
     * Need to finish the "complete order"
+
+Customer:
+    * Needs a "Waiting for a Driver" screen
+    * Then when their order has been accepted by a driver, both the driver and customer needs some information about each other
+    * Customer needs to recieve real-time updates on the driver's location, alongside current wait time
+    * Needs to have a "balance" screen to "load" money into the app.
+    * Cancel an order button
+
+
+ToDo:
+1.* Profile View for Driver and Customer (Must include image)
+2. (Done) Customer app/login and create
+3. (Done) Tracking and updating Driver coordinates every 10 seconds, (needed useRef and more useState's)
+4. Sending customer profile as response to the driver, and notifying the customer of the driver
+    - Now I just need to send responses to the both of them
+    - Sent response to the driver, now the customer needs to ping the backend every 10 seconds, to get the location of the driver
+5. Transfer balance of customer to the driver, and ending ride for both after the driver says they are done
+6. Finished With App!!! (After Styling is done)
