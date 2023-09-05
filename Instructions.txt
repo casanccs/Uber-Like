@@ -39,11 +39,11 @@ Customer:
 
 
 ToDo:
-1.* Profile View for Driver and Customer (Must include image)
-2. (Done) Customer app/login and create
-3. (Done) Tracking and updating Driver coordinates every 10 seconds, (needed useRef and more useState's)
-4. Sending customer profile as response to the driver, and notifying the customer of the driver
-    - Now I just need to send responses to the both of them
-    - Sent response to the driver, now the customer needs to ping the backend every 10 seconds, to get the location of the driver
-5. Transfer balance of customer to the driver, and ending ride for both after the driver says they are done
-6. Finished With App!!! (After Styling is done)
+1. (Doneish) Profile View for Driver and Customer (Must include image)
+    - Need to be able to upload profile photo, and to show the driver/customer the other
+    - Edit photos
+    - Customer should know what kind of car it is
+2. Customer should be able to cancel the order if a driver isn't assigned yet
+3. (Done ish) Stripe Integration
+    - Need to confirm the payout works
+4. Finished With App!!! (After Styling is done)

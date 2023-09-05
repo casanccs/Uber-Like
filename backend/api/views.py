@@ -5,8 +5,13 @@ from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
 from .serializers import *
+from decimal import Decimal
 import jwt
+from django.conf import settings
+import stripe
 
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def getUser(request):
     token = request.COOKIES.get('jwt')
@@ -170,3 +175,52 @@ class Ping2View(APIView):
             serializer = OrderSerializer(order[0], many=False)
             return Response(serializer.data)
         return Response("No order", status=404)
+    
+class ChargeView(APIView):
+
+    def post(self,request):
+        customer = Customer.objects.get(user=getUser(request))
+        stripeCustomer = stripe.Customer.create(email=customer.user.email)
+        data = request.data
+        session = stripe.checkout.Session.create(
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': f'${data["amount"]} credit',
+                    },
+                    'unit_amount_decimal': int(data["amount"])*100,
+                },
+                'quantity': 1,
+            }],
+            customer=stripeCustomer.id,
+            mode = 'payment',
+            success_url = 'http://google.com'
+        )
+        return Response({'url': session.url}, status=200)
+    
+class ChargeHook(APIView):
+    
+    def post(self, request):
+        sig_header = request.headers['STRIPE_SIGNATURE']
+        payload = request.data
+        if payload['type'] == 'checkout.session.completed':
+            customer = Customer.objects.get(user__email=payload['data']['object']['customer_details']['email'])
+            customer.balance += Decimal(payload['data']['object']['amount_subtotal'] / 100)
+            customer.save()
+        return Response("Hi")
+    
+class PaymentIntentView(APIView):
+    
+    def post(self, request):
+        data = request.data # amount
+        print(data)
+        driver = Driver.objects.get(user=getUser(request))
+        stripeCustomer = stripe.Customer.create(email=driver.user.email)
+        payment_intent = stripe.PaymentIntent.create(
+            amount=data['amount'],
+            currency='usd',
+            customer=stripeCustomer,
+            description="Payout"
+        )
+        return Response({'client_secret': payment_intent.client_secret})
